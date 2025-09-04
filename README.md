@@ -41,3 +41,5 @@ Requests (auth)
 Chat (auth)
 - GET /api/chat/:otherUserId
 - POST /api/chat/:otherUserId { text }
+
+# TROT
