@@ -2,9 +2,12 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { postJson } from "../lib/api";
 
 export default function Register() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -13,6 +16,14 @@ export default function Register() {
     <View style={styles.container}>
       <Text style={styles.title}>Join Us 🎉</Text>
       <Text style={styles.subtitle}>Create your account</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Full Name"
+        placeholderTextColor="#999"
+        value={name}
+        onChangeText={setName}
+      />
 
       <TextInput
         style={styles.input}
@@ -38,7 +49,35 @@ export default function Register() {
         onChangeText={setConfirmPassword}
       />
 
-      <TouchableOpacity style={styles.primaryBtn} onPress={() => router.push("/screens/Dashboard")}>
+      <TouchableOpacity
+        style={styles.primaryBtn}
+        onPress={async () => {
+          try {
+            if (!name || !email || !password || password !== confirmPassword) return;
+            const resp = await postJson("/api/auth/register", { name, email, password });
+            const data = await resp.json();
+            if (!resp.ok) {
+              alert(data?.message || `Register failed (${resp.status})`);
+              return;
+            }
+            if (data?.token) await AsyncStorage.setItem("authToken", data.token);
+            if (data?.avatarUrl) {
+              await AsyncStorage.setItem("avatarUrl", data.avatarUrl);
+              (globalThis as any).__AVATAR_URL__ = data.avatarUrl;
+            } else {
+              await AsyncStorage.removeItem("avatarUrl");
+              (globalThis as any).__AVATAR_URL__ = "";
+            }
+            if (data?.name) await AsyncStorage.setItem("userName", data.name);
+            if (data?.email) await AsyncStorage.setItem("userEmail", data.email);
+            (globalThis as any).__USER_NAME__ = data?.name || name;
+            (globalThis as any).__USER_EMAIL__ = data?.email || email;
+            router.push("/screens/Dashboard");
+          } catch (e: any) {
+            alert(e?.message || "Network error. Check API base and firewall.");
+          }
+        }}
+      >
         <Text style={styles.primaryBtnText}>Sign Up</Text>
       </TouchableOpacity>
 

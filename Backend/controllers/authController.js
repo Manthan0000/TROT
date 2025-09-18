@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 // Generate JWT
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "14d" });
 };
 
 // Register
@@ -31,11 +31,19 @@ exports.registerUser = async (req, res) => {
       password: hashedPassword,
     });
 
+    const token = generateToken(user.id);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 14 * 24 * 60 * 60 * 1000,
+    });
     res.status(201).json({
       _id: user.id,
       name: user.name,
       email: user.email,
-      token: generateToken(user.id),
+      avatarUrl: user.avatarUrl,
+      token,
     });
   } catch (err) {
     console.error("Register Error:", err.message);
@@ -64,11 +72,19 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    const token = generateToken(user.id);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 14 * 24 * 60 * 60 * 1000,
+    });
     res.json({
       _id: user.id,
       name: user.name,
       email: user.email,
-      token: generateToken(user.id),
+      avatarUrl: user.avatarUrl,
+      token,
     });
   } catch (err) {
     console.error("Login Error:", err.message);
