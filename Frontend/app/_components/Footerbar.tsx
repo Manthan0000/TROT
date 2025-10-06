@@ -127,14 +127,23 @@ export default function Footerbar() {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
+<<<<<<< HEAD
     bottom: 50,
+=======
+    bottom: 0,
+>>>>>>> Jatan
     left: 0,
     right: 0,
   },
   bottomSpace: {
     width: "100%",
+<<<<<<< HEAD
     height: 10,
     backgroundColor: "#000",
+=======
+    height: 0,
+    backgroundColor: "transparent",
+>>>>>>> Jatan
   },
   footer: {
     flexDirection: "row",

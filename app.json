@@ -16,7 +16,12 @@
         "foregroundImage": "./Frontend/assets/images/default-avatar.jpg",
         "backgroundColor": "#ffffff"
       },
+<<<<<<< HEAD
       "edgeToEdgeEnabled": true
+=======
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.TROT"
+>>>>>>> Jatan
     },
     "web": {
       "bundler": "metro",
