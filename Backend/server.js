@@ -20,6 +20,7 @@ app.use("/static", express.static(require("path").join(__dirname, "assets")));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/settings", require("./routes/settingsRoutes"));
 app.use("/api/avatar", require("./routes/avatarRoutes"));
+app.use("/api/skills", require("./routes/skillsRoutes"));
 
 // Simple health check to verify device -> backend connectivity
 app.get("/", (req, res) => {
