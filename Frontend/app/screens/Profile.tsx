@@ -10,17 +10,23 @@ const PROFILE_MENU = [
   { key: "my-profile", label: "My Profile", icon: "person-circle-outline" },
   { key: "enhance-profile", label: "Enhance Profile", icon: "person-add-outline" },
   { key: "add-skills", label: "Add Skills", icon: "construct-outline" },
-  { key: "courses", label: "Courses", icon: "school-outline" },
   { key: "credits", label: "Credits", icon: "star-outline" },
   { key: "buy-credits", label: "Buy Credits", icon: "card-outline" },
   { key: "create-avatar", label: "Create Avatar", icon: "color-wand-outline" },
-  { key: "referrals", label: "Referrals", icon: "people-outline" },
-  { key: "watchlist", label: "Watchlist", icon: "bookmark-outline" },
 ];
 
 export default function Profile() {
   const [avatarModal, setAvatarModal] = useState(false);
   const [enhanceOpen, setEnhanceOpen] = useState(false);
+  const [readOnlyEnhanceOpen, setReadOnlyEnhanceOpen] = useState(false);
+  const [myProfileOpen, setMyProfileOpen] = useState(false);
+  const [enhancedProfile, setEnhancedProfile] = useState<null | {
+    gender: string | null;
+    dob: string | null;
+    role: string | null;
+    phone: string | null;
+    education: string | null;
+  }>(null);
   const [sourceUrl, setSourceUrl] = useState("");
   const initialFallback = Image.resolveAssetSource(require("../../assets/images/default-avatar.jpg")).uri;
   const [avatarUrl, setAvatarUrl] = useState(initialFallback);
@@ -32,6 +38,7 @@ export default function Profile() {
   const [role, setRole] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
   const [education, setEducation] = useState<string>("");
+  const [skills, setSkills] = useState<string[]>([]);
   const [dobPickerOpen, setDobPickerOpen] = useState(false);
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
@@ -77,9 +84,61 @@ export default function Profile() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.row}
-            onPress={() => {
-              if (item.key === "create-avatar") setAvatarModal(true);
-              if (item.key === "enhance-profile") setEnhanceOpen(true);
+            onPress={async () => {
+              if (item.key === "create-avatar") { setAvatarModal(true); return; }
+              if (item.key === "my-profile") {
+                try {
+                  // Ensure we have latest enhanced profile before showing
+                  const token = await AsyncStorage.getItem("authToken");
+                  const base = resolveApiBase();
+                  const resp = await fetch(`${base}/api/settings/enhanced`, {
+                    method: "GET",
+                    headers: { Authorization: token ? `Bearer ${token}` : "" },
+                  });
+                  let data: any = null;
+                  try { data = await resp.json(); } catch {}
+                  if (resp.ok && data) {
+                    setEnhancedProfile({
+                      gender: data.gender ?? null,
+                      dob: data.dob ? String(data.dob).slice(0,10) : null,
+                      role: data.role ?? null,
+                      phone: data.phone ?? null,
+                      education: data.education ?? null,
+                    });
+                  }
+                } catch {}
+                setMyProfileOpen(true);
+                return;
+              }
+              if (item.key === "enhance-profile") {
+                try {
+                  const token = await AsyncStorage.getItem("authToken");
+                  const base = resolveApiBase();
+                  const resp = await fetch(`${base}/api/settings/enhanced`, {
+                    method: "GET",
+                    headers: { Authorization: token ? `Bearer ${token}` : "" },
+                  });
+                  let data: any = null;
+                  try { data = await resp.json(); } catch {}
+                  if (!resp.ok) { setEnhanceOpen(true); return; }
+                  // If profile exists (_id not null) show read-only view, else open editor
+                  if (data && data._id) {
+                    setEnhancedProfile({
+                      gender: data.gender ?? null,
+                      dob: data.dob ? String(data.dob).slice(0,10) : null,
+                      role: data.role ?? null,
+                      phone: data.phone ?? null,
+                      education: data.education ?? null,
+                    });
+                    setReadOnlyEnhanceOpen(true);
+                  } else {
+                    setEnhanceOpen(true);
+                  }
+                } catch {
+                  setEnhanceOpen(true);
+                }
+                return;
+              }
             }}
           >
             <Text style={styles.rowLabel}>{item.label}</Text>
@@ -131,12 +190,12 @@ export default function Profile() {
                     if (!pendingAvatarUri) return;
                     const token = await (await import("@react-native-async-storage/async-storage")).default.getItem("authToken");
                     const form = new FormData();
-                    form.append("avatar", {
-                      // @ts-ignore
-                      uri: pendingAvatarUri,
-                      name: "avatar.jpg",
-                      type: "image/jpeg",
-                    });
+                    // React Native FormData accepts a file-like object with uri/name/type
+                    // Cast to any to satisfy DOM lib typing in RN environment
+                    form.append(
+                      "avatar",
+                      ({ uri: pendingAvatarUri, name: "avatar.jpg", type: "image/jpeg" } as unknown) as any
+                    );
                     const base = resolveApiBase();
                     const resp = await fetch(`${base}/api/avatar/upload`, {
                       method: "POST",
@@ -216,22 +275,135 @@ export default function Profile() {
                   try {
                     const token = await AsyncStorage.getItem("authToken");
                     const base = resolveApiBase();
+                    // Normalize gender strictly: trim + lowercase, then whitelist
+                    const inputGender = (gender || "").trim().toLowerCase();
+                    const normalizedGender = ["male","female","other"].includes(inputGender) ? inputGender : "other";
                     const resp = await fetch(`${base}/api/settings/enhanced`, {
                       method: "PUT",
                       headers: { "Content-Type": "application/json", Authorization: token ? `Bearer ${token}` : "" },
-                      body: JSON.stringify({ gender, dob, role, phone, education }),
+                      body: JSON.stringify({ gender: normalizedGender, dob, role, phone, education }),
                     });
                     let data: any = null;
                     try { data = await resp.json(); } catch {}
                     if (!resp.ok) { alert((data && data.message) || `Failed to save (${resp.status})`); return; }
-                    alert("Profile updated");
                     setEnhanceOpen(false);
+                    // show read-only with saved details
+                    setEnhancedProfile({
+                      gender: data?.gender ?? normalizedGender,
+                      dob: data?.dob ? String(data.dob).slice(0,10) : (dob || null),
+                      role: data?.role ?? (role || null),
+                      phone: data?.phone ?? (phone || null),
+                      education: data?.education ?? (education || null),
+                    });
+                    setReadOnlyEnhanceOpen(true);
                   } catch (e) {
                     alert("Network error. Check API base and firewall.");
                   }
                 }}
               >
                 <Text style={styles.btnText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Read-only Enhanced Profile Modal */}
+      <Modal visible={readOnlyEnhanceOpen} animationType="slide" transparent>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Enhanced Profile</Text>
+            <Text style={styles.modalHint}>These details are locked. Edit later from Settings.</Text>
+
+            <View style={{ marginTop: 12, gap: 12 }}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Gender</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{
+                  enhancedProfile?.gender ? (enhancedProfile.gender.charAt(0).toUpperCase() + enhancedProfile.gender.slice(1)) : "—"
+                }</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Date of Birth</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{enhancedProfile?.dob || "—"}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Role</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{
+                  enhancedProfile?.role ? (enhancedProfile.role.charAt(0).toUpperCase() + enhancedProfile.role.slice(1)) : "—"
+                }</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Phone</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{enhancedProfile?.phone || "—"}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Education</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{enhancedProfile?.education || "—"}</Text>
+              </View>
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={()=> setReadOnlyEnhanceOpen(false)}>
+                <Text style={styles.btnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* My Profile - read-only details */}
+      <Modal visible={myProfileOpen} animationType="slide" transparent>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>My Profile</Text>
+            <Text style={styles.modalHint}>Your account details</Text>
+
+            <View style={{ alignItems: "center", marginTop: 12 }}>
+              <Image source={{ uri: avatarUrl }} style={{ width: 90, height: 90, borderRadius: 45 }} />
+            </View>
+
+            <View style={{ marginTop: 16, gap: 12 }}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Username</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{name || "—"}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Email</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{email || "—"}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Gender</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{
+                  (enhancedProfile?.gender && (enhancedProfile.gender.charAt(0).toUpperCase() + enhancedProfile.gender.slice(1))) || "—"
+                }</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Date of Birth</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{enhancedProfile?.dob || "—"}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Role</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{
+                  (enhancedProfile?.role && (enhancedProfile.role.charAt(0).toUpperCase() + enhancedProfile.role.slice(1))) || "—"
+                }</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Phone Number</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{enhancedProfile?.phone || "—"}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Education</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{enhancedProfile?.education || "—"}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Skills</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>{skills.length ? skills.join(", ") : "—"}</Text>
+              </View>
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={()=> setMyProfileOpen(false)}>
+                <Text style={styles.btnText}>Close</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -296,14 +468,33 @@ const styles = StyleSheet.create({
   modalCard: { backgroundColor:"#ffffff", padding:16, borderTopLeftRadius:16, borderTopRightRadius:16 },
   modalTitle: { fontSize:18, fontWeight:"700", color:"#111827" },
   modalHint: { marginTop:4, color:"#6b7280" },
+  readonlyText: { marginTop:4, color: "#111827" },
   fieldLabel: { marginTop:12, color:"#374151", fontWeight:"600" },
   input: { marginTop:12, borderWidth:1, borderColor:"#e5e7eb", borderRadius:10, paddingHorizontal:12, height:44, color:"#111827" },
-  radioRow: { flexDirection:"row", gap:16, marginTop:10 },
-  radioItem: { flexDirection:"row", alignItems:"center", gap:8 },
-  radioOuter: { width:18, height:18, borderRadius:9, borderWidth:2, borderColor:"#9ca3af", alignItems:"center", justifyContent:"center" },
+  radioRow: {
+    flexDirection:"row",
+    alignItems: "center",
+    marginTop:10,
+    paddingHorizontal: 6,
+  },
+  radioItem: {
+    flexDirection:"row",
+    alignItems:"center",
+    gap:8,
+    paddingHorizontal: 8,
+    minWidth: 0,
+    overflow: "visible",
+  },
+  radioLeft: { flex: 1, justifyContent: "flex-start" },
+  radioCenter: { flex: 1, justifyContent: "center" },
+  radioRight: { flex: 1, justifyContent: "flex-end" },
+  radioOuter: { width:16, height:16, borderRadius:8, borderWidth:2, borderColor:"#9ca3af", alignItems:"center", justifyContent:"center" },
   radioOuterActive: { borderColor: "#111827" },
-  radioInner: { width:10, height:10, borderRadius:5, backgroundColor:"#111827" },
-  radioLabel: { color: "#111827" },
+  radioInner: { width:8, height:8, borderRadius:4, backgroundColor:"#111827" },
+  radioLabel: { color: "#111827", fontSize: 14, includeFontPadding: false, textAlignVertical: "center", lineHeight: 18, paddingRight: 2, flexShrink: 0 },
+  detailRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  detailLabel: { color: "#6b7280", width: 140 },
+  detailValue: { color: "#111827", flex: 1, textAlign: "right" },
   previewRow: { flexDirection:"row", gap:12, marginTop:14 },
   previewCol: { flex:1 },
   previewLabel: { fontSize:12, color:"#6b7280", marginBottom:6 },
