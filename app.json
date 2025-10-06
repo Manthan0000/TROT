@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "TROT",
+    "slug": "TROT",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./Frontend/assets/images/default-avatar.jpg",
+    "scheme": "TROT",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./Frontend/assets/images/default-avatar.jpg",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.TROT"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./Frontend/assets/images/default-avatar.jpg"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "root": "Frontend/app"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./Frontend/assets/images/default-avatar.jpg",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ]
+  }
+}
