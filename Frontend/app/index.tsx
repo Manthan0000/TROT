@@ -52,7 +52,6 @@
 
 import { useRouter } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import theme from "../theme/theme";
 
 
 export default function Home() {
@@ -61,7 +60,7 @@ export default function Home() {
   return (
 
     <View style={styles.container}>
-      <Image source={{ uri: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fskill-exchange&psig=AOvVaw02A_Ct8Gq1_0hw39W4SNJF&ust=1757578384646000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCIjXlPDfzY8DFQAAAAAdAAAAABAL" }} style={{ width: 120, height: 120, borderRadius: 60 }} />
+      <Image source={require("../assets/images/default-avatar.jpg")} style={{ width: 120, height: 120, borderRadius: 24 }} />
 
       <Text style={styles.title}>Welcome 👋</Text>
 
@@ -81,30 +80,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: theme.colors.background,
-    padding: theme.spacing.lg,
+    backgroundColor: "#ffffff",
+    padding: 20,
   },
   title: {
-    fontSize: theme.fontSizes.large,
+    fontSize: 24,
     fontWeight: "bold",
-    color: theme.colors.text,
-    marginBottom: theme.spacing.lg,
+    color: "#111827",
+    marginBottom: 20,
   },
   button: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.md,
+    backgroundColor: "#E0AA3E",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 12,
     width: 200,
     alignItems: "center",
   },
   secondaryButton: {
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: "#6DB193",
   },
   buttonText: {
-    color: theme.colors.buttonText,
-    fontSize: theme.fontSizes.medium,
+    color: "#ffffff",
+    fontSize: 16,
     fontWeight: "bold",
   },
 });
