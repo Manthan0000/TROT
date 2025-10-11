@@ -1,22 +1,44 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import SkillsList from "../../_components/SkillsList";
 
 export default function Music() {
   const navigation = useNavigation<any>();
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
+    <SafeAreaView style={styles.container}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
         <Text style={styles.back}>← Back</Text>
       </TouchableOpacity>
-      <Text style={styles.text}>Music & Dance Activites</Text>
-    </View>
+      <SkillsList category="Music and Dance" categoryTitle="Music & Dance" />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", justifyContent: "center" },
-  text: { fontSize: 22, fontWeight: "600", marginTop: 10 },
-  back: { fontSize: 18, color: "#007AFF", position: "absolute", top: 50, left: 20 },
+  container: { 
+    flex: 1, 
+    backgroundColor: "#F7F9FC" 
+  },
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+    zIndex: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  back: { 
+    fontSize: 16, 
+    color: "#007AFF", 
+    fontWeight: "600" 
+  },
 });
