@@ -2,6 +2,10 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { LogBox } from "react-native";
+
+// Disable development overlays
+LogBox.ignoreAllLogs(true);
 
 // Import your screens
 import Dashboard from "./screens/Dashboard";

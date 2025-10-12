@@ -52,17 +52,17 @@
 
 import { useRouter } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-
+import { useTheme } from "./theme/ThemeContext";
 
 export default function Home() {
   const router = useRouter();
+  const { theme } = useTheme();
 
   return (
-
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Image source={require("../assets/images/default-avatar.jpg")} style={{ width: 120, height: 120, borderRadius: 24 }} />
 
-      <Text style={styles.title}>Welcome 👋</Text>
+      <Text style={[styles.title, { color: theme.text }]}>Welcome 👋</Text>
 
       <Pressable style={styles.button} onPress={() => router.push("/login")}>
         <Text style={styles.buttonText}>Login</Text>

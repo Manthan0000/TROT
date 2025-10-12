@@ -4,21 +4,23 @@ import { useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { postJson } from "../lib/api";
+import { useTheme } from "./theme/ThemeContext";
 
 export default function Register() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Join Us 🎉</Text>
-      <Text style={styles.subtitle}>Create your account</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>Join Us 🎉</Text>
+      <Text style={[styles.subtitle, { color: theme.muted }]}>Create your account</Text>
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
         placeholder="Full Name"
         placeholderTextColor="#999"
         value={name}
@@ -26,14 +28,14 @@ export default function Register() {
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
         placeholder="Email"
         placeholderTextColor="#999"
         value={email}
         onChangeText={setEmail}
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
         placeholder="Password"
         placeholderTextColor="#999"
         secureTextEntry
@@ -41,7 +43,7 @@ export default function Register() {
         onChangeText={setPassword}
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
         placeholder="Confirm Password"
         placeholderTextColor="#999"
         secureTextEntry

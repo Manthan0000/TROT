@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import FooterBar from "../_components/Footerbar";
 import { useRouter } from "expo-router";
 import { resolveApiBase } from "../../lib/api";
+import { useTheme } from '../theme/ThemeContext';
 
 const PROFILE_MENU = [
   { key: "my-profile", label: "My Profile", icon: "person-circle-outline" },
@@ -32,6 +33,7 @@ const PROFILE_MENU = [
 
 export default function Profile() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [avatarModal, setAvatarModal] = useState(false);
   const [enhanceOpen, setEnhanceOpen] = useState(false);
   const [readOnlyEnhanceOpen, setReadOnlyEnhanceOpen] = useState(false);
@@ -43,7 +45,6 @@ export default function Profile() {
     phone: string | null;
     education: string | null;
   }>(null);
-  const [sourceUrl, setSourceUrl] = useState("");
   const initialFallback = Image.resolveAssetSource(
     require("../../assets/images/default-avatar.jpg")
   ).uri;
@@ -56,7 +57,7 @@ export default function Profile() {
   const [role, setRole] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
   const [education, setEducation] = useState<string>("");
-  const [skills, setSkills] = useState<string[]>([]);
+  const [skills, setSkills] = useState<{ name: string, category: string }[]>([]);
   const [dobPickerOpen, setDobPickerOpen] = useState(false);
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
@@ -88,12 +89,12 @@ export default function Profile() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.secondaryBackground }]}>
         <Image source={{ uri: avatarUrl }} style={styles.avatar} />
         <View>
-          <Text style={styles.name}>{name || "Your Name"}</Text>
-          <Text style={styles.email}>{email || "your@email.com"}</Text>
+          <Text style={[styles.name, { color: theme.text }]}>{name || "Your Name"}</Text>
+          <Text style={[styles.email, { color: theme.muted }]}>{email || "your@email.com"}</Text>
         </View>
       </View>
 
@@ -101,10 +102,10 @@ export default function Profile() {
         data={PROFILE_MENU}
         keyExtractor={(i) => i.key}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={() => <View style={[styles.separator, { backgroundColor: theme.border }]} />}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.row}
+            style={[styles.row, { backgroundColor: theme.surface }]}
             onPress={async () => {
               if (item.key === "create-avatar") {
                 setAvatarModal(true);
@@ -143,12 +144,14 @@ export default function Profile() {
                       headers: { Authorization: token ? `Bearer ${token}` : "" },
                     });
                     const skillsData = await skillsResp.json();
-                    if (skillsResp.ok && Array.isArray(skillsData)) {
-                      setSkills(
-                        skillsData
-                          .map((s: any) => (typeof s?.name === "string" ? s.name : ""))
-                          .filter((n: string) => n.trim().length > 0)
-                      );
+                    if (skillsResp.ok && Array.isArray(skillsData.skills)) {
+                      setSkills(skillsData.skills.map((skill: any) => ({
+                        name: skill.name || '',
+                        category: skill.category || '',
+                        description: skill.description || '',
+                        experience: skill.experience || '',
+                        proofUrl: skill.proofUrl || ''
+                      })));
                     } else {
                       setSkills([]);
                     }
@@ -171,12 +174,8 @@ export default function Profile() {
                   try {
                     data = await resp.json();
                   } catch {}
-                  if (!resp.ok) {
-                    setEnhanceOpen(true);
-                    return;
-                  }
-                  // If profile exists (_id not null) show read-only view, else open editor
-                  if (data && data._id) {
+                  // Prefill editor with existing values (if any) and open editor always
+                  if (data) {
                     setEnhancedProfile({
                       gender: data.gender ?? null,
                       dob: data.dob ? String(data.dob).slice(0, 10) : null,
@@ -184,10 +183,13 @@ export default function Profile() {
                       phone: data.phone ?? null,
                       education: data.education ?? null,
                     });
-                    setReadOnlyEnhanceOpen(true);
-                  } else {
-                    setEnhanceOpen(true);
+                    setGender((data.gender ?? "") as string);
+                    setDob(data.dob ? String(data.dob).slice(0, 10) : "");
+                    setRole((data.role ?? "") as string);
+                    setPhone((data.phone ?? "") as string);
+                    setEducation((data.education ?? "") as string);
                   }
+                  setEnhanceOpen(true);
                 } catch {
                   setEnhanceOpen(true);
                 }
@@ -195,7 +197,7 @@ export default function Profile() {
               }
             }}
           >
-            <Text style={styles.rowLabel}>{item.label}</Text>
+            <Text style={[styles.rowLabel, { color: theme.text }]}>{item.label}</Text>
           </TouchableOpacity>
         )}
       />
@@ -226,20 +228,19 @@ export default function Profile() {
                   const asset = result.assets?.[0];
                   if (!asset?.uri) return;
                   setPendingAvatarUri(asset.uri);
-                  setSourceUrl(asset.uri);
-                } catch (e) {
+                } catch (_) {
                   alert("Upload failed. Check network/API base.");
                 }
               }}
             >
-              <Text style={[styles.btnText, { color: "#111827" }]}>
+              <Text style={[styles.btnText, { color: theme.text }]}>
                 Choose from Library
               </Text>
             </TouchableOpacity>
 
             <View style={styles.previewRow}>
               <View style={styles.previewCol}>
-                <Text style={styles.previewLabel}>Your Photo</Text>
+                <Text style={[styles.previewLabel, { color: theme.muted }]}>Your Photo</Text>
                 <Image
                   source={{ uri: pendingAvatarUri || avatarUrl }}
                   style={styles.previewImg}
@@ -306,7 +307,7 @@ export default function Profile() {
                       setPendingAvatarUri("");
                       setAvatarModal(false);
                     }
-                  } catch (e) {
+                  } catch (_) {
                     alert("Upload failed. Check API base and token.");
                   }
                 }}
@@ -366,7 +367,7 @@ export default function Profile() {
                 setDobPickerOpen(true);
               }}
             >
-              <Text style={{ color: dob ? "#111827" : "#6b7280" }}>
+              <Text style={{ color: dob ? theme.text : theme.muted }}>
                 {dob || "Choose date"}
               </Text>
             </TouchableOpacity>
@@ -376,22 +377,22 @@ export default function Profile() {
               style={[styles.input, { justifyContent: "center" }]}
               onPress={() => setRolePickerOpen(true)}
             >
-              <Text style={{ color: role ? "#111827" : "#6b7280" }}>
+              <Text style={{ color: role ? theme.text : theme.muted }}>
                 {role || "Select role (student/professional/other)"}
               </Text>
             </TouchableOpacity>
             <TextInput
               placeholder="Phone Number"
-              placeholderTextColor="#6b7280"
-              style={styles.input}
+              placeholderTextColor={theme.muted}
+              style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
               keyboardType="phone-pad"
               onChangeText={(t) => setPhone(t)}
               value={phone}
             />
             <TextInput
               placeholder="Education"
-              placeholderTextColor="#6b7280"
-              style={styles.input}
+              placeholderTextColor={theme.muted}
+              style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
               onChangeText={(t) => setEducation(t)}
               value={education}
             />
@@ -455,7 +456,7 @@ export default function Profile() {
                       education: data?.education ?? (education || null),
                     });
                     setReadOnlyEnhanceOpen(true);
-                  } catch (e) {
+                  } catch (_) {
                     alert("Network error. Check API base and firewall.");
                   }
                 }}
@@ -471,15 +472,15 @@ export default function Profile() {
       <Modal visible={readOnlyEnhanceOpen} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Enhanced Profile</Text>
-            <Text style={styles.modalHint}>
+            <Text style={[styles.modalTitle, { color: '#111827' }]}>Enhanced Profile</Text>
+            <Text style={[styles.modalHint, { color: '#6b7280' }]}>
               These details are locked. Edit later from Settings.
             </Text>
 
             <View style={{ marginTop: 12, gap: 12 }}>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Gender</Text>
-                <Text style={styles.detailValue} numberOfLines={1}>
+                <Text style={[styles.detailLabel, { color: '#6b7280' }]}>Gender</Text>
+                <Text style={[styles.detailValue, { color: '#111827' }]} numberOfLines={1}>
                   {enhancedProfile?.gender
                     ? enhancedProfile.gender.charAt(0).toUpperCase() +
                       enhancedProfile.gender.slice(1)
@@ -487,14 +488,14 @@ export default function Profile() {
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Date of Birth</Text>
-                <Text style={styles.detailValue} numberOfLines={1}>
+                <Text style={[styles.detailLabel, { color: '#6b7280' }]}>Date of Birth</Text>
+                <Text style={[styles.detailValue, { color: '#111827' }]} numberOfLines={1}>
                   {enhancedProfile?.dob || "—"}
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Role</Text>
-                <Text style={styles.detailValue} numberOfLines={1}>
+                <Text style={[styles.detailLabel, { color: '#6b7280' }]}>Role</Text>
+                <Text style={[styles.detailValue, { color: '#111827' }]} numberOfLines={1}>
                   {enhancedProfile?.role
                     ? enhancedProfile.role.charAt(0).toUpperCase() +
                       enhancedProfile.role.slice(1)
@@ -502,14 +503,14 @@ export default function Profile() {
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Phone</Text>
-                <Text style={styles.detailValue} numberOfLines={1}>
+                <Text style={[styles.detailLabel, { color: '#6b7280' }]}>Phone</Text>
+                <Text style={[styles.detailValue, { color: '#111827' }]} numberOfLines={1}>
                   {enhancedProfile?.phone || "—"}
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Education</Text>
-                <Text style={styles.detailValue} numberOfLines={1}>
+                <Text style={[styles.detailLabel, { color: '#6b7280' }]}>Education</Text>
+                <Text style={[styles.detailValue, { color: '#111827' }]} numberOfLines={1}>
                   {enhancedProfile?.education || "—"}
                 </Text>
               </View>
@@ -517,10 +518,25 @@ export default function Profile() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={[styles.btn, styles.btnPrimary]}
+                style={[styles.btn, styles.btnSecondary]}
                 onPress={() => setReadOnlyEnhanceOpen(false)}
               >
-                <Text style={styles.btnText}>Close</Text>
+                <Text style={[styles.btnText, { color: '#111827' }]}>Close</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btn, styles.btnPrimary]}
+                onPress={() => {
+                  // Prefill editor with current values and switch to edit modal
+                  setGender((enhancedProfile?.gender ?? '') as string);
+                  setDob(enhancedProfile?.dob ?? '');
+                  setRole((enhancedProfile?.role ?? '') as string);
+                  setPhone((enhancedProfile?.phone ?? '') as string);
+                  setEducation((enhancedProfile?.education ?? '') as string);
+                  setReadOnlyEnhanceOpen(false);
+                  setEnhanceOpen(true);
+                }}
+              >
+                <Text style={styles.btnText}>Edit</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -592,8 +608,10 @@ export default function Profile() {
               </View>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Skills</Text>
-                <Text style={styles.detailValue} numberOfLines={2}>
-                  {skills.length ? skills.join(", ") : "—"}
+                <Text style={[styles.detailValue, { flex: 1, textAlign: "left" }]} numberOfLines={0}>
+                  {skills.length 
+                    ? skills.map(skill => `${skill.name} (${skill.category})`).join("\n") 
+                    : "—"}
                 </Text>
               </View>
             </View>
@@ -668,46 +686,45 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffff" },
+  container: { flex: 1 }, // backgroundColor set via theme
   header: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    backgroundColor: "#eef6ff",
-  },
+  }, // backgroundColor set via theme
   avatar: { width: 60, height: 60, borderRadius: 30, marginRight: 12 },
-  name: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  email: { fontSize: 13, color: "#6b7280" },
-  separator: { height: 1, backgroundColor: "#e5e7eb" },
+  name: { fontSize: 18, fontWeight: "700" }, // color set via theme
+  email: { fontSize: 13 }, // color set via theme
+  separator: { height: 1 }, // backgroundColor set via theme
   row: {
     paddingVertical: 14,
     paddingHorizontal: 8,
-    backgroundColor: "#ffffff",
-  },
-  rowLabel: { fontSize: 16, color: "#111827" },
+  }, // backgroundColor set via theme
+  rowLabel: { fontSize: 16 }, // color set via theme
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "flex-end",
   },
   modalCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fff", // Keep light for modal
     padding: 16,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  modalHint: { marginTop: 4, color: "#6b7280" },
-  readonlyText: { marginTop: 4, color: "#111827" },
-  fieldLabel: { marginTop: 12, color: "#374151", fontWeight: "600" },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: "#1a202c" }, // Dark text on light modal
+  modalHint: { marginTop: 4, color: "#4a5568" }, // Muted text on light modal
+  readonlyText: { marginTop: 4, color: "#1a202c" },
+  fieldLabel: { marginTop: 12, color: "#4a5568", fontWeight: "600" },
   input: {
     marginTop: 12,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#e2e8f0",
     borderRadius: 10,
     paddingHorizontal: 12,
     height: 44,
-    color: "#111827",
+    color: "#1a202c",
+    backgroundColor: "#ffffff",
   },
   radioRow: {
     flexDirection: "row",
@@ -735,15 +752,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  radioOuterActive: { borderColor: "#111827" },
+  radioOuterActive: { borderColor: "#1a202c" },
   radioInner: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#111827",
+    backgroundColor: "#1a202c",
   },
   radioLabel: {
-    color: "#111827",
+    color: "#1a202c",
     fontSize: 14,
     includeFontPadding: false,
     textAlignVertical: "center",
@@ -757,11 +774,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
-  detailLabel: { color: "#6b7280", width: 140 },
-  detailValue: { color: "#111827", flex: 1, textAlign: "right" },
+  detailLabel: { width: 140, color: "#4a5568" }, // Muted text for labels
+  detailValue: { flex: 1, textAlign: "right", color: "#1a202c" }, // Dark text for values
   previewRow: { flexDirection: "row", gap: 12, marginTop: 14 },
   previewCol: { flex: 1 },
-  previewLabel: { fontSize: 12, color: "#6b7280", marginBottom: 6 },
+  previewLabel: { fontSize: 12, marginBottom: 6, color: "#4a5568" }, // Muted text for preview label
   previewImg: {
     width: "100%",
     height: 140,
@@ -775,7 +792,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   btn: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10 },
-  btnSecondary: { backgroundColor: "#e5e7eb" },
-  btnPrimary: { backgroundColor: "#111827" },
+  btnSecondary: { backgroundColor: "#e2e8f0" },
+  btnPrimary: { backgroundColor: "#1a202c" },
   btnText: { color: "#ffffff", fontWeight: "600" },
 });
+

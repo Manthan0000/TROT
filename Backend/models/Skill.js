@@ -2,15 +2,15 @@ const mongoose = require("mongoose");
 
 const allowedCategories = [
   "Technical",
-  "creative",
-  "mentorship",
+  "Creative",
+  "Mentorship",
   "Music and Dance",
   "Primary and Secondary",
   "Competition",
-  "more",
-  "finance",
+  "More",
+  "Finance",
   "Hardware",
-  "gamming",
+  "Gaming",
 ];
 
 const skillSchema = new mongoose.Schema(

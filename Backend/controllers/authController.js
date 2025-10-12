@@ -91,3 +91,29 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error, please try again later" });
   }
 };
+// Delete Account
+exports.deleteAccount = async (req, res) => {
+  try {
+    console.log("Delete Account Request - User ID:", req.user);
+    const userId = req.user;
+
+    // Find and delete the user
+    const deletedUser = await User.findByIdAndDelete(userId);
+    console.log("Deleted User:", deletedUser);
+
+    if (!deletedUser) {
+      console.log("User not found with ID:", userId);
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Clear the auth cookie
+    res.clearCookie("token");
+
+    console.log("Account successfully deleted for user:", userId);
+    res.json({ message: "Account successfully deleted" });
+  } catch (err) {
+    console.error("Delete Account Error:", err.message);
+    console.error("Full error:", err);
+    res.status(500).json({ message: "Server error, please try again later" });
+  }
+};
