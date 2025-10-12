@@ -21,6 +21,10 @@ const enhancedProfileSchema = new mongoose.Schema(
     },
     phone: { type: String },
     education: { type: String },
+    skills: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Skill"
+    }],
   },
   { timestamps: true }
 );

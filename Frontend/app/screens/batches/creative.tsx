@@ -1,44 +1,6 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import SkillsList from "../../_components/SkillsList";
+import React from 'react';
+import SkillScreen from '../SkillScreen';
 
-export default function Creative() {
-  const navigation = useNavigation<any>();
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Text style={styles.back}>← Back</Text>
-      </TouchableOpacity>
-      <SkillsList category="creative" categoryTitle="Creative" />
-    </SafeAreaView>
-  );
+export default function CreativeSkillsScreen() {
+  return <SkillScreen categoryId="technical" />;
 }
-
-const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#F7F9FC" 
-  },
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 20,
-    zIndex: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  back: { 
-    fontSize: 16, 
-    color: "#007AFF", 
-    fontWeight: "600" 
-  },
-});

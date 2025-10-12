@@ -4,6 +4,7 @@ import { Entypo, Feather, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "../theme/ThemeContext";
 
 type HeaderProps = {
   userName?: string;
@@ -11,6 +12,7 @@ type HeaderProps = {
 
 export default function Header({ userName = "" }: HeaderProps) {
   const router = useRouter();
+  const { theme } = useTheme();
   const [avatarUrl, setAvatarUrl] = useState<string>((globalThis as any).__AVATAR_URL__ || Image.resolveAssetSource(require("../../assets/images/default-avatar.jpg")).uri);
 
   useFocusEffect(
@@ -43,15 +45,15 @@ export default function Header({ userName = "" }: HeaderProps) {
   );
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { backgroundColor: theme.surface }]}> 
       <View style={styles.topRow}>
-        <Text style={styles.brand}>TROT</Text>
+        <Text style={[styles.brand, { color: theme.text }]}>TROT</Text>
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Feather name="inbox" size={22} color="#1f2937" />
+          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: theme.background }]}> 
+            <Feather name="inbox" size={22} color={theme.muted} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={22} color="#1f2937" />
+          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: theme.background }]}> 
+            <Ionicons name="notifications-outline" size={22} color={theme.muted} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.push("../screens/Profile")}>
             <Image source={{ uri: avatarUrl }} style={styles.avatar} />
@@ -60,16 +62,15 @@ export default function Header({ userName = "" }: HeaderProps) {
       </View>
 
       <View style={styles.greetingWrap}>
-        <Text style={styles.greetLineOne}>Hi, {displayName || "User"}</Text>
-        <Text style={styles.greetLineTwo}>Unlock Your Career</Text>
+        <Text style={[styles.greetLineOne, { color: theme.text }]}>Hi, {displayName || "User"}</Text>
+        <Text style={[styles.greetLineTwo, { color: theme.text }]}>Unlock Your Career</Text>
       </View>
-
-      <View style={styles.searchBar}>
-        <Entypo name="magnifying-glass" size={18} color="#6b7280" />
+      <View style={[styles.searchBar, { backgroundColor: theme.background }]}> 
+        <Entypo name="magnifying-glass" size={18} color={theme.muted} />
         <TextInput
           placeholder="Search Opportunities"
-          placeholderTextColor="#9ca3af"
-          style={styles.searchInput}
+          placeholderTextColor={theme.muted}
+          style={[styles.searchInput, { color: theme.text }]}
         />
       </View>
     </View>
@@ -93,14 +94,14 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#0f172a",
+    color: "#1a202c",
   },
   actions: { flexDirection: "row", alignItems: "center", gap: 14 },
   iconBtn: { padding: 6, borderRadius: 8, backgroundColor: "#ffffff" },
   avatar: { width: 34, height: 34, borderRadius: 17, marginLeft: 6 },
   greetingWrap: { marginBottom: 12 },
-  greetLineOne: { fontSize: 28, fontWeight: "700", color: "#0f172a" },
-  greetLineTwo: { fontSize: 24, fontWeight: "600", color: "#0f172a" },
+  greetLineOne: { fontSize: 28, fontWeight: "700", color: "#1a202c" },
+  greetLineTwo: { fontSize: 24, fontWeight: "600", color: "#1a202c" },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -109,7 +110,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  searchInput: { marginLeft: 8, flex: 1, color: "#111827" },
+  searchInput: { marginLeft: 8, flex: 1, color: "#1a202c" },
 });
 
 
