@@ -32,4 +32,24 @@ exports.listMySkills = async (req, res) => {
   }
 };
 
+exports.getSkillsByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
+    const skills = await Skill.find({ category }).sort({ createdAt: -1 });
+    return res.json(skills);
+  } catch (err) {
+    return res.status(500).json({ message: err.message || "Failed to fetch skills by category" });
+  }
+};
+
+exports.getSkillTeachers = async (req, res) => {
+  try {
+    const { skillName } = req.params;
+    const skills = await Skill.find({ name: skillName }).populate('userId', 'name email').sort({ createdAt: -1 });
+    return res.json(skills);
+  } catch (err) {
+    return res.status(500).json({ message: err.message || "Failed to fetch skill teachers" });
+  }
+};
+
 
