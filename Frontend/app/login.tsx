@@ -2,26 +2,30 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { postJson } from "../lib/api";
+import { useTheme } from "./theme/ThemeContext";
 
 export default function Login() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back 👋</Text>
-      <Text style={styles.subtitle}>Log in to continue</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>Welcome Back 👋</Text>
+      <Text style={[styles.subtitle, { color: theme.muted }]}>Log in to continue</Text>
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
         placeholder="Email"
         placeholderTextColor="#999"
         value={email}
         onChangeText={setEmail}
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: theme.surface, color: theme.text }]}
         placeholder="Password"
         placeholderTextColor="#999"
         secureTextEntry
@@ -29,7 +33,35 @@ export default function Login() {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.primaryBtn} onPress={() => router.push("/screens/Dashboard")}>
+      <TouchableOpacity
+        style={styles.primaryBtn}
+        onPress={async () => {
+          try {
+            const resp = await postJson("/api/auth/login", { email, password });
+            const data = await resp.json();
+            if (!resp.ok) {
+              alert(data?.message || `Login failed (${resp.status})`);
+              return;
+            }
+            if (data?._id) await AsyncStorage.setItem("userId", String(data._id));
+            if (data?.token) await AsyncStorage.setItem("authToken", data.token);
+            if (data?.avatarUrl) {
+              await AsyncStorage.setItem("avatarUrl", data.avatarUrl);
+              (globalThis as any).__AVATAR_URL__ = data.avatarUrl;
+            } else {
+              await AsyncStorage.removeItem("avatarUrl");
+              (globalThis as any).__AVATAR_URL__ = "";
+            }
+            if (data?.name) await AsyncStorage.setItem("userName", data.name);
+            if (data?.email) await AsyncStorage.setItem("userEmail", data.email);
+            (globalThis as any).__USER_NAME__ = data?.name || (globalThis as any).__USER_NAME__;
+            (globalThis as any).__USER_EMAIL__ = data?.email || (globalThis as any).__USER_EMAIL__;
+            router.push("/screens/Dashboard");
+          } catch (e: any) {
+            alert(e?.message || "Network error. Check API base and firewall.");
+          }
+        }}
+      >
         <Text style={styles.primaryBtnText}>Log In</Text>
       </TouchableOpacity>
 
