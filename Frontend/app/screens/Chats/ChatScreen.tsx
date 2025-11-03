@@ -11,12 +11,16 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { useTheme } from "../../theme/ThemeContext";
+import { useTheme } from "@/Frontend/app/theme/ThemeContext";
 import { resolveApiBase } from "../../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useSafeAreaInsets, SafeAreaView as SafeAreaViewContext } from "react-native-safe-area-context";
+
+
+
+
 
 interface Message {
   _id: string;
@@ -32,6 +36,7 @@ interface Message {
 
 export default function ChatScreen({ route }: any) {
   const localParams = useLocalSearchParams();
+  const router = useRouter();
   const headerHeight = useHeaderHeight();
   const insets = useSafeAreaInsets();
   // Support both classic route.params and Expo Router local params
@@ -158,7 +163,42 @@ export default function ChatScreen({ route }: any) {
   };
 
   return (
-    <SafeAreaViewContext style={[styles.safeArea, { backgroundColor: theme.secondaryBackground }]} edges={['top']}>
+    <SafeAreaViewContext style={[styles.safeArea, { backgroundColor: theme.secondaryBackground }]} edges={['bottom']}>
+      {/* Header with user name */}
+      <View style={[styles.header, { 
+        backgroundColor: theme.background, 
+        borderBottomColor: theme.border || "#e0e0e0",
+        paddingTop: Math.max(insets.top, 0),
+      }]}>
+        <View style={styles.headerContent}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Text style={[styles.backButtonText, { color: theme.text }]}>←</Text>
+          </TouchableOpacity>
+          
+          {resolvedParticipant && (
+            <View style={styles.headerInfo}>
+              <View style={styles.headerAvatar}>
+                {resolvedParticipant.avatarUrl ? (
+                  <Image
+                    source={{ uri: resolvedParticipant.avatarUrl }}
+                    style={styles.headerAvatarImage}
+                  />
+                ) : (
+                  <View style={styles.defaultAvatar}>
+                    <Text style={styles.defaultAvatarText}>
+                      {(resolvedParticipant.name || resolvedParticipant.email || "U").charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.headerName, { color: theme.text }]} numberOfLines={1}>
+                {resolvedParticipant.name || resolvedParticipant.email || "Chat"}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -173,7 +213,7 @@ export default function ChatScreen({ route }: any) {
             style={styles.messagesList}
             contentContainerStyle={[
               styles.messagesContent,
-              { paddingTop: 24, paddingBottom: 24 }
+              { paddingTop: 16, paddingBottom: 0 }
             ]}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
@@ -205,7 +245,7 @@ export default function ChatScreen({ route }: any) {
           ]}
           onLayout={(e) => setComposerHeight(e.nativeEvent.layout.height)}
         >
-          <View style={[styles.inputContent, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+          <View style={[styles.inputContent, { paddingBottom: Math.max(insets.bottom, 0) }]}>
             <TextInput
               style={[styles.input, { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border || "#e0e0e0" }]}
               value={inputText}
@@ -232,6 +272,58 @@ export default function ChatScreen({ route }: any) {
 
 const styles = StyleSheet.create({
   safeArea: {
+    flex: 1,
+  },
+  header: {
+    borderBottomWidth: 1,
+    width: "100%",
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    minHeight: 56,
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  backButtonText: {
+    fontSize: 24,
+    fontWeight: "600",
+  },
+  headerInfo: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 12,
+    overflow: "hidden",
+  },
+  headerAvatarImage: {
+    width: "100%",
+    height: "100%",
+  },
+  defaultAvatar: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#007AFF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  defaultAvatarText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  headerName: {
+    fontSize: 18,
+    fontWeight: "600",
     flex: 1,
   },
   container: {

@@ -9,7 +9,7 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { useTheme } from "../../theme/ThemeContext";
+import { useTheme } from "@/Frontend/app/theme/ThemeContext";
 import SendChatRequest from "./SendChatRequest";
 import { resolveApiBase, getJson } from "../../utils/api";
 
@@ -112,7 +112,7 @@ export default function UserSearch() {
                 source={
                   item.avatarUrl
                     ? { uri: item.avatarUrl }
-                    : require("../../../assets/images/default-avatar.jpg")
+                    : { uri: "https://i.pravatar.cc/100?img=3" }
                 }
                 style={styles.avatar}
               />

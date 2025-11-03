@@ -4,7 +4,7 @@ import { useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { postJson } from "../lib/api";
-import { useTheme } from "./theme/ThemeContext";
+import { useTheme } from "@/Frontend/app/theme/ThemeContext";
 
 export default function Register() {
   const router = useRouter();

@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Image,
 } from "react-native";
-import { useTheme } from "../../theme/ThemeContext";
+import { useTheme } from "@/Frontend/app/theme/ThemeContext";
 
 interface ChatRequest {
   _id: string;
@@ -49,7 +49,7 @@ export default function ChatRequests({
         source={
           item.sender.avatarUrl
             ? { uri: item.sender.avatarUrl }
-            : require("../../../assets/images/default-avatar.jpg")
+            : { uri: "https://i.pravatar.cc/100?img=1" }
         }
         style={styles.avatar}
       />

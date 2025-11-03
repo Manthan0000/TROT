@@ -3,22 +3,54 @@ import { View, StyleSheet, Alert, TouchableOpacity, Text, TextInput } from "reac
 import ChatList from "./ChatList";
 import ChatRequests from "./ChatRequests";
 import UserSearch from "./UserSearch";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { ChatRequest } from "@/Frontend/app/types/ChatRequest";
+
+
+
+
+
+ // Adjust the path as needed
+
+type RootStackParamList = {
+  'screens/Chats/ChatScreen': { chatId: string; participant: User };
+};
 import { useTheme } from "../../theme/ThemeContext";
 import { resolveApiBase, getJson, patchJson } from "../../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+interface User {
+  _id: string;
+  name?: string;
+  email?: string;
+}
+
+interface Message {
+  content?: string;
+  // add other message fields as needed
+}
+
+interface Chat {
+  _id: string;
+  participants: User[];
+  lastMessage?: Message;
+  // add other chat fields as needed
+}
+// Removed duplicate ChatRequest interface definition.
+// Import ChatRequest from a shared types file instead.
+
+
 export function ChatsDashboard() {
   const { theme } = useTheme();
-  const [chats, setChats] = useState([]);
-  const [filteredChats, setFilteredChats] = useState([]);
-  const [requests, setRequests] = useState([]);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [filteredChats, setFilteredChats] = useState<Chat[]>([]);
+  const [requests, setRequests] = useState<ChatRequest[]>([]);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [loading, setLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState("");
-  const navigation = useNavigation();
   const [currentUserId, setCurrentUserId] = useState<string>("");
-
+   
   useEffect(() => {
     (async () => {
       try {
@@ -59,14 +91,12 @@ export function ChatsDashboard() {
     // Get the chat details to find the participant
     const chat = chats.find((c) => c._id === chatId);
     if (chat) {
-      const otherParticipant = chat.participants.find(
-        (p) => p._id !== currentUserId
-      );
+      const otherParticipant = chat.participants.find(p => p._id !== currentUserId);
       if (otherParticipant) {
-        navigation.navigate("screens/Chats/ChatScreen" as never, {
+        navigation.navigate("screens/Chats/ChatScreen", {
           chatId,
           participant: otherParticipant,
-        } as never);
+        });
       }
     }
   };
@@ -86,7 +116,7 @@ export function ChatsDashboard() {
           const chatId = data?.chat?._id;
           const participant = request?.sender;
           if (chatId && participant) {
-            navigation.navigate("screens/Chats/ChatScreen" as never, { chatId, participant } as never);
+            navigation.navigate("screens/Chats/ChatScreen", { chatId, participant });
             fetchData();
             return;
           }
@@ -174,7 +204,7 @@ export function ChatsDashboard() {
         <TextInput
           style={[styles.searchInput, { color: theme.text }]}
           placeholder="Search chats..."
-          placeholderTextColor={theme.textSecondary}
+          placeholderTextColor={theme.text}
           value={chatSearchQuery}
           onChangeText={handleChatSearch}
         />
@@ -186,13 +216,14 @@ export function ChatsDashboard() {
         onReject={handleRejectRequest}
       />
       <ChatList
-        data={filteredChats}
-        onChatPress={handleChatPress}
-        onDeleted={(chatId: string) => {
-          setChats((prev) => prev.filter((c: any) => c._id !== chatId));
-          setFilteredChats((prev) => prev.filter((c: any) => c._id !== chatId));
-        }}
-      />
+  data={filteredChats as import("@/Frontend/app/types/Chat.ts").Chat[]} // 👈 force compatibility
+  onChatPress={handleChatPress}
+  onDeleted={(chatId: string) => {
+    setChats(prev => prev.filter(c => c._id !== chatId));
+    setFilteredChats(prev => prev.filter(c => c._id !== chatId));
+  }}
+/>
+
     </View>
   );
 }
@@ -244,4 +275,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-});
+/* setRequests is now managed by useState above */
+}
+);

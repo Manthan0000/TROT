@@ -8,7 +8,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
-import { useTheme } from "../../theme/ThemeContext";
+import { useTheme } from "@/Frontend/app/theme/ThemeContext";
 import { postJson } from "../../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 

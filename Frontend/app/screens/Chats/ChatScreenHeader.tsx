@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useTheme } from "../../theme/ThemeContext";
+import { useTheme } from "@/Frontend/app/theme/ThemeContext";
 import { deleteJson } from "../../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -129,7 +129,7 @@ export default function ChatScreenHeader({ route, options }: ChatScreenHeaderPro
                 source={
                   resolvedParticipant.avatarUrl
                     ? { uri: resolvedParticipant.avatarUrl }
-                    : require("../../../assets/images/default-avatar.jpg")
+                    : { uri: "https://i.pravatar.cc/100?img=2" }
                 }
                 style={styles.headerAvatar}
               />

@@ -8,25 +8,11 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { useTheme } from "../../theme/ThemeContext";
+import { useTheme } from "@/Frontend/app/theme/ThemeContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { deleteJson } from "../../utils/api";
+import { Chat } from "@/Frontend/app/types/Chat";
 
-interface Chat {
-  _id: string;
-  participants: Array<{
-    _id: string;
-    name: string;
-    email: string;
-    avatarUrl?: string;
-  }>;
-  lastMessage?: {
-    content: string;
-    createdAt: string;
-  };
-  lastMessageTime: string;
-  unreadCount?: number;
-}
 
 interface ChatListProps {
   data: Chat[];
@@ -89,7 +75,7 @@ export default function ChatList({ data, onChatPress, onDeleted }: ChatListProps
           source={
             otherParticipant.avatarUrl
               ? { uri: otherParticipant.avatarUrl }
-              : require("../../../assets/images/default-avatar.jpg")
+              : { uri: "https://i.pravatar.cc/100?img=4" }
           }
           style={styles.avatar}
         />

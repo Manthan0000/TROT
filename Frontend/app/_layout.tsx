@@ -8,9 +8,19 @@
 // Frontend/app/_layout.tsx
 import { Stack } from "expo-router";
 
+
+
 export default function Layout() {
   return (
     <Stack>
+      <Stack.Screen
+        name="[chatId]"
+        options={{
+          title: "Chat",
+          //headerShown: true,   // ✅ Show header bar
+          headerBackTitle: "Back",
+        }}
+      />
       <Stack.Screen name="index" options={{ title: "Home" }} />
       <Stack.Screen name="login" options={{ title: "Login" }} />
       <Stack.Screen name="register" options={{ title: "Register" }} />
